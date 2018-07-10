@@ -1,14 +1,16 @@
 package meugeninua.appfromscratch.app.managers;
 
+import android.arch.lifecycle.GenericLifecycleObserver;
+import android.arch.lifecycle.Lifecycle;
+import android.arch.lifecycle.LifecycleOwner;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.AnyThread;
 import android.support.annotation.MainThread;
 import android.support.v4.util.ArrayMap;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -43,45 +45,69 @@ public class AppEventsManager {
         }
     }
 
-    @AnyThread
-    public <T> UUID subscribeToEvent(
+    @MainThread
+    public <T> void subscribeToEvent(
+            final LifecycleOwner owner,
             final Class<T> clazz,
             final TypedObserver<T> observer) {
+        final ObserverWrapper<T> impl = new ObserverWrapper<>();
+        impl.observer = observer;
+        impl.clazz = clazz;
+        impl.ownerRef = new WeakReference<>(owner);
+        impl.managerRef = new WeakReference<>(this);
+
         UUID key = null;
         synchronized (this) {
             while (key == null || observers.containsKey(key)) {
                 key = UUID.randomUUID();
             }
-            final ObserverWrapper<T> impl = new ObserverWrapper<>(
-                    clazz, observer);
+            impl.key = key;
             observers.put(key, impl);
         }
-        return key;
+        impl.attachToLifecycle();
     }
 
-    @AnyThread
-    public void unsubscribe(final UUID... keys) {
-        unsubscribe(Arrays.asList(keys));
-    }
-
-    @AnyThread
-    public synchronized void unsubscribe(final Collection<UUID> keys) {
-        for (UUID key : keys) {
-            Timber.d("Unsubscribed %s", key);
-            observers.remove(key);
+    @MainThread
+    synchronized void unsubscribe(final UUID key) {
+        Timber.d("Unsubscribed %s", key);
+        final ObserverWrapper<?> wrapper = observers.remove(key);
+        if (wrapper != null) {
+            wrapper.detachFromLifecycle();
         }
     }
 
-    private static class ObserverWrapper<T> {
+    private static class ObserverWrapper<T> implements GenericLifecycleObserver {
 
-        private final Class<T> clazz;
-        private final TypedObserver<T> observer;
+        Class<T> clazz;
+        TypedObserver<T> observer;
+        UUID key;
+        WeakReference<LifecycleOwner> ownerRef;
+        WeakReference<AppEventsManager> managerRef;
 
-        ObserverWrapper(
-                final Class<T> clazz,
-                final TypedObserver<T> observer) {
-            this.clazz = clazz;
-            this.observer = observer;
+        @Override
+        public void onStateChanged(
+                final LifecycleOwner source,
+                final Lifecycle.Event event) {
+            final AppEventsManager manager = managerRef.get();
+            if (manager != null && source.getLifecycle()
+                    .getCurrentState() == Lifecycle.State.DESTROYED) {
+                manager.unsubscribe(key);
+            }
+        }
+
+        void attachToLifecycle() {
+            final LifecycleOwner owner = ownerRef.get();
+            if (owner != null) {
+                owner.getLifecycle().addObserver(this);
+            }
+        }
+
+        @MainThread
+        void detachFromLifecycle() {
+            final LifecycleOwner owner = ownerRef.get();
+            if (owner != null) {
+                owner.getLifecycle().removeObserver(this);
+            }
         }
 
         @AnyThread

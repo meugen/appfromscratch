@@ -7,8 +7,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.UUID;
-
 import javax.inject.Inject;
 
 import meugeninua.appfromscratch.R;
@@ -26,8 +24,6 @@ public class MainFragment extends BaseFragment<MainBinding, ArchState> implement
     @Inject AppEventsManager eventsManager;
     @Inject MainViewModel viewModel;
 
-    private UUID key;
-
     @Nullable
     @Override
     public View onCreateView(
@@ -41,17 +37,12 @@ public class MainFragment extends BaseFragment<MainBinding, ArchState> implement
     public void onActivityCreated(@Nullable final Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         Timber.d("%s", viewModel);
-        key = eventsManager.subscribeToEvent(
+        eventsManager.subscribeToEvent(
+                this,
                 DisplayTimeEvent.class,
                 this::onDisplayTime);
         binding.setupListeners(this);
         binding.enableButtons(viewModel.isStarted());
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        eventsManager.unsubscribe(key);
     }
 
     private void onDisplayTime(final DisplayTimeEvent event) {
