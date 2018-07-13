@@ -9,7 +9,7 @@ import meugeninua.appfromscratch.app.di.modules.ComponentsModule;
 import meugeninua.appfromscratch.app.di.modules.ViewModelsModule;
 import meugeninua.appfromscratch.app.di.scopes.PerApplication;
 
-@Component(modules = {AndroidSupportInjectionModule.class,
+@Component(modules = {/*AndroidSupportInjectionModule.class,*/
         AppModule.class, ComponentsModule.class, ViewModelsModule.class})
 @PerApplication
 public interface AppComponent extends AndroidInjector<TheApp> {

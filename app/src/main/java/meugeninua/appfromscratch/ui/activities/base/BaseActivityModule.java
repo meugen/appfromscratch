@@ -5,11 +5,12 @@ import android.support.v7.app.AppCompatActivity;
 
 import dagger.Binds;
 import dagger.Module;
+import meugeninua.appfromscratch.app.di.qualifiers.ActivityContext;
 import meugeninua.appfromscratch.app.di.scopes.PerActivity;
 
 @Module
 public interface BaseActivityModule {
 
-    @Binds @PerActivity
+    @Binds @ActivityContext @PerActivity
     Context bindActivityContext(AppCompatActivity activity);
 }
