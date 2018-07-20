@@ -16,11 +16,11 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
-import meugeninua.appfromscratch.app.di.scopes.PerApplication;
 import timber.log.Timber;
 
-@PerApplication
+@Singleton
 public class AppEventsManager {
 
     private final Map<UUID, ObserverWrapper<?>> observers;
