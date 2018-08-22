@@ -1,4 +1,6 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
 apply plugin: 'com.getkeepsafe.dexcount'
 
 android {
@@ -24,15 +26,19 @@ android {
 }
 
 dependencies {
-    implementation deps.support.appcompat
-    implementation deps.support.constraint
+    implementation "${packages.kotlin}:kotlin-stdlib-jdk7:${versions.kotlin}"
 
-    implementation deps.dagger.core
-    annotationProcessor deps.dagger.compiler
-    implementation deps.dagger.android.core
-    annotationProcessor deps.dagger.android.compiler
+    implementation "${packages.support}:appcompat-v7:${versions.support}"
+    implementation "${packages.support}.constraint:constraint-layout:1.1.0"
 
-    implementation deps.lifecycle.extensions
+    implementation "${packages.dagger}:dagger:${versions.dagger}"
+    kapt "${packages.dagger}:dagger-compiler:${versions.dagger}"
+    implementation "${packages.dagger}:dagger-android-support:${versions.dagger}"
+    kapt "${packages.dagger}:dagger-android-processor:${versions.dagger}"
 
-    implementation deps.timber
+    implementation "${packages.lifecycle}:extensions:${versions.lifecycle}"
+    implementation "${packages.timber}:timber:${versions.timber}"
+}
+repositories {
+    mavenCentral()
 }
